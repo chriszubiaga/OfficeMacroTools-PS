@@ -1,4 +1,4 @@
-# Office VBA Management Scripts for PowerShell
+# MSOffice VBA Management PowerShell Scripts 
 
 This repository contains PowerShell scripts designed to help manage VBA (Visual Basic for Applications) projects within Microsoft Office files (Excel, Word, PowerPoint). You can inspect VBA macro code and remove specific VBA modules programmatically.
 
