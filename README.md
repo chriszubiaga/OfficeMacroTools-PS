@@ -38,15 +38,17 @@ This script inspects an Office file and outputs details about its VBA project, i
 **Parameters:**
 
 * `-FilePath <string>`: (Mandatory) The full path to the Office file you want to inspect.
+* `-EnableTrustAccess`: (Switch) If specified, the script will attempt to automatically enable the "Trust access to the VBA project object model" registry setting for the current user and Office version. It will attempt to revert this change in the `finally` block. **Note:** Office applications must be restarted for this registry change to take full effect on the running application instance.
+
 
 **Example:**
 
 ```powershell
 .\Get-OfficeMacroInfo.ps1 -FilePath "C:\Path\To\Your\Workbook.xlsm"
 ```powershell
-.\Get-OfficeMacroInfo.ps1 -FilePath "C:\Path\To\Your\Document.docm"
+.\Get-OfficeMacroInfo.ps1 -FilePath "C:\Path\To\Your\Document.docm -EnableTrustAccess"
 ```powershell
-.\Get-OfficeMacroInfo.ps1 -FilePath "C:\Path\To\Your\Presentation.pptm"
+.\Get-OfficeMacroInfo.ps1 -FilePath "C:\Path\To\Your\Presentation.pptm -EnableTrustAccess"
 ```
 
 ### `Remove-OfficeVbaModule.ps1`

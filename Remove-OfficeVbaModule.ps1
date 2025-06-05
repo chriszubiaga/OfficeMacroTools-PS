@@ -44,8 +44,8 @@ switch ($fileExtension) {
 }
 
 # --- Important: Office Trust Center Setting & File State ---
-Write-Host "WARNING: Ensure 'Trust access to the VBA project object model' is ENABLED in the Trust Center settings of $($appComObjectString.Split('.')[0])." -ForegroundColor Yellow
-Write-Host "WARNING: Ensure the target file '$FilePath' is NOT open in the Office application before running this script." -ForegroundColor Yellow
+Write-Host "[*] Ensure 'Trust access to the VBA project object model' is ENABLED in the Trust Center settings of $($appComObjectString.Split('.')[0])." -ForegroundColor Yellow
+Write-Host "[*] Ensure the target file '$FilePath' is NOT open in the Office application before running this script." -ForegroundColor Yellow
 
 # Attempt to check for an exclusive file lock before proceeding
 try {
@@ -54,8 +54,8 @@ try {
     $testStream.Dispose()
 }
 catch [System.IO.IOException] {
-    Write-Host "ERROR: File '$FilePath' is currently in use or locked." -ForegroundColor Red
-    Write-Host "WARNING: Please close the file in the Office application and ensure no other process is locking it, then try running the script again." -ForegroundColor Yellow
+    Write-Host "[!] ERROR: File '$FilePath' is currently in use or locked." -ForegroundColor Red
+    Write-Host "[*] Please close the file in the Office application and ensure no other process is locking it, then try running the script again." -ForegroundColor Yellow
     exit 1
 }
 
@@ -130,7 +130,7 @@ try {
             # vbext_ct_Document (Type 100) components like 'ThisWorkbook', 'Sheet1', 'ThisDocument'
             # cannot be removed directly. Their code can be cleared instead if needed.
             if ($componentTypeFound -eq 100) { # vbext_ct_Document
-                 Write-Host "WARNING: Module '${componentNameFound}' is a Document-type component and cannot be removed directly. You can clear its code using a different script/logic." -ForegroundColor Yellow
+                 Write-Host "[*] Module '${componentNameFound}' is a Document-type component and cannot be removed directly. You can clear its code using a different script/logic." -ForegroundColor Yellow
             } else {
                 Write-Host "[*] Attempting to remove module '${componentNameFound}'..." -ForegroundColor DarkCyan
                 $vbaProject.VBComponents.Remove($vbComponent)
@@ -138,11 +138,11 @@ try {
                 $moduleRemoved = $true
             }
         } else {
-            Write-Host "WARNING: Module '$ModuleNameToRemove' not found in the VBA project of '$($documentObject.Name)'." -ForegroundColor Yellow
+            Write-Host "[*] Module '$ModuleNameToRemove' not found in the VBA project of '$($documentObject.Name)'." -ForegroundColor Yellow
         }
          Write-Host "--------------------------------------------------"
     } else {
-        Write-Host "WARNING: No VBA project found or accessible in '$($documentObject.Name)'." -ForegroundColor Yellow
+        Write-Host "[*] No VBA project found or accessible in '$($documentObject.Name)'." -ForegroundColor Yellow
         Write-Host "--------------------------------------------------"
     }
 
@@ -151,26 +151,26 @@ try {
         $documentObject.Save()
         Write-Host "[=] File saved successfully." -ForegroundColor Green
     } elseif (-not $hasVBProject) {
-        Write-Host "[*] No action taken as no VBA project was found or accessible." -ForegroundColor DarkGray
+        Write-Host "[*] No action taken as no VBA project was found or accessible." -ForegroundColor Cyan
     } elseif (-not $vbComponent) { # Module was not found, but project was accessible
-        Write-Host "[*] No action taken as module '$ModuleNameToRemove' was not found." -ForegroundColor DarkGray
+        Write-Host "[*] No action taken as module '$ModuleNameToRemove' was not found." -ForegroundColor Cyan
     } else { # Module was found but was a document type
-        Write-Host "[*] No removal action taken for document component '$($vbComponent.Name)'. No save initiated by this script for this reason." -ForegroundColor DarkGray
+        Write-Host "[*] No removal action taken for document component '$($vbComponent.Name)'. No save initiated by this script for this reason." -ForegroundColor Cyan
     }
 }
 catch {
     Write-Error "An error occurred: $($_.Exception.Message)"
     if ($_.Exception.Message -like "*file is open*" -or $_.Exception.Message -like "*0x800A03EC*") {
-         Write-Host "WARNING: This error can occur if the file is already open in the Office application, is corrupt, or locked by another process." -ForegroundColor Yellow
+         Write-Host "[*] This error can occur if the file is already open in the Office application, is corrupt, or locked by another process." -ForegroundColor Yellow
     }
 }
 finally {
     # Release COM objects. Order matters: specific objects before general ones.
-    if ($vbComponent -ne $null) {
+    if ($null -ne $vbComponent) {
         [System.Runtime.InteropServices.Marshal]::ReleaseComObject($vbComponent) | Out-Null
         Remove-Variable vbComponent -ErrorAction SilentlyContinue
     }
-    if ($vbaProject -ne $null) {
+    if ($null -ne $vbaProject) {
         [System.Runtime.InteropServices.Marshal]::ReleaseComObject($vbaProject) | Out-Null
         Remove-Variable vbaProject -ErrorAction SilentlyContinue
     }
@@ -186,7 +186,7 @@ finally {
                 $documentObject.Close($false) # SaveChanges:=$false
             }
         } catch {
-            Write-Host "WARNING: Could not gracefully close the document object. Error: $($_.Exception.Message)" -ForegroundColor Yellow
+            Write-Host "[*] Could not gracefully close the document object. Error: $($_.Exception.Message)" -ForegroundColor Yellow
         }
         [System.Runtime.InteropServices.Marshal]::ReleaseComObject($documentObject) | Out-Null
         Remove-Variable documentObject -ErrorAction SilentlyContinue
@@ -196,7 +196,7 @@ finally {
         try {
             $appObject.Quit()
         } catch {
-            Write-Host "WARNING: Could not gracefully quit the Office application. Error: $($_.Exception.Message)" -ForegroundColor Yellow
+            Write-Host "[*] Could not gracefully quit the Office application. Error: $($_.Exception.Message)" -ForegroundColor Yellow
         }
         [System.Runtime.InteropServices.Marshal]::ReleaseComObject($appObject) | Out-Null
         Remove-Variable appObject -ErrorAction SilentlyContinue
