@@ -10,7 +10,6 @@ param (
 # Determine Office Application and settings based on file extension
 $fileExtension = [System.IO.Path]::GetExtension($FilePath).ToLowerInvariant()
 $appComObjectString = $null
-# $openMethodName is not explicitly used later, open is called directly on the collection
 $documentsOrPresentationsCollection = $null
 
 switch ($fileExtension) {
@@ -39,14 +38,26 @@ switch ($fileExtension) {
         $documentsOrPresentationsCollection = "Presentations"
     }
     default {
-        Write-Error "Unsupported file type: $fileExtension. This script supports .xlsm, .xls, .docm, .dotm, .pptm, .ppsm for module removal."
+        Write-Host "ERROR: Unsupported file type: $fileExtension. This script supports .xlsm, .xls, .docm, .dotm, .pptm, .ppsm for module removal." -ForegroundColor Red
         exit 1
     }
 }
 
 # --- Important: Office Trust Center Setting & File State ---
-Write-Warning "Ensure 'Trust access to the VBA project object model' is ENABLED in the Trust Center settings of $($appComObjectString.Split('.')[0])."
-Write-Warning "Ensure the target file '$FilePath' is NOT open in the Office application before running this script."
+Write-Host "WARNING: Ensure 'Trust access to the VBA project object model' is ENABLED in the Trust Center settings of $($appComObjectString.Split('.')[0])." -ForegroundColor Yellow
+Write-Host "WARNING: Ensure the target file '$FilePath' is NOT open in the Office application before running this script." -ForegroundColor Yellow
+
+# Attempt to check for an exclusive file lock before proceeding
+try {
+    $testStream = [System.IO.File]::Open($FilePath, [System.IO.FileMode]::Open, [System.IO.FileAccess]::ReadWrite, [System.IO.FileShare]::None)
+    $testStream.Close()
+    $testStream.Dispose()
+}
+catch [System.IO.IOException] {
+    Write-Host "ERROR: File '$FilePath' is currently in use or locked." -ForegroundColor Red
+    Write-Host "WARNING: Please close the file in the Office application and ensure no other process is locking it, then try running the script again." -ForegroundColor Yellow
+    exit 1
+}
 
 # Create the specific Office Application COM object
 $appObject = New-Object -ComObject $appComObjectString
@@ -80,7 +91,7 @@ try {
     }
 
     if (-not $documentObject) {
-        Write-Error "Failed to open the file for editing: '$FilePath'"
+        Write-Host "ERROR: Failed to open the file for editing: '$FilePath'" -ForegroundColor Red
         throw "FileOpenFailed"
     }
     Write-Host "[*] Successfully opened: '$($documentObject.Name)'" -ForegroundColor Cyan
@@ -119,7 +130,7 @@ try {
             # vbext_ct_Document (Type 100) components like 'ThisWorkbook', 'Sheet1', 'ThisDocument'
             # cannot be removed directly. Their code can be cleared instead if needed.
             if ($componentTypeFound -eq 100) { # vbext_ct_Document
-                 Write-Warning "Module '${componentNameFound}' is a Document-type component and cannot be removed directly. You can clear its code using a different script/logic."
+                 Write-Host "WARNING: Module '${componentNameFound}' is a Document-type component and cannot be removed directly. You can clear its code using a different script/logic." -ForegroundColor Yellow
             } else {
                 Write-Host "[*] Attempting to remove module '${componentNameFound}'..." -ForegroundColor DarkCyan
                 $vbaProject.VBComponents.Remove($vbComponent)
@@ -127,11 +138,11 @@ try {
                 $moduleRemoved = $true
             }
         } else {
-            Write-Warning "Module '$ModuleNameToRemove' not found in the VBA project of '$($documentObject.Name)'."
+            Write-Host "WARNING: Module '$ModuleNameToRemove' not found in the VBA project of '$($documentObject.Name)'." -ForegroundColor Yellow
         }
          Write-Host "--------------------------------------------------"
     } else {
-        Write-Warning "No VBA project found or accessible in '$($documentObject.Name)'."
+        Write-Host "WARNING: No VBA project found or accessible in '$($documentObject.Name)'." -ForegroundColor Yellow
         Write-Host "--------------------------------------------------"
     }
 
@@ -150,7 +161,7 @@ try {
 catch {
     Write-Error "An error occurred: $($_.Exception.Message)"
     if ($_.Exception.Message -like "*file is open*" -or $_.Exception.Message -like "*0x800A03EC*") {
-         Write-Warning "This error can occur if the file is already open in the Office application, is corrupt, or locked by another process."
+         Write-Host "WARNING: This error can occur if the file is already open in the Office application, is corrupt, or locked by another process." -ForegroundColor Yellow
     }
 }
 finally {
@@ -175,7 +186,7 @@ finally {
                 $documentObject.Close($false) # SaveChanges:=$false
             }
         } catch {
-            Write-Warning "Could not gracefully close the document object. Error: $($_.Exception.Message)"
+            Write-Host "WARNING: Could not gracefully close the document object. Error: $($_.Exception.Message)" -ForegroundColor Yellow
         }
         [System.Runtime.InteropServices.Marshal]::ReleaseComObject($documentObject) | Out-Null
         Remove-Variable documentObject -ErrorAction SilentlyContinue
@@ -185,7 +196,7 @@ finally {
         try {
             $appObject.Quit()
         } catch {
-            Write-Warning "Could not gracefully quit the Office application. Error: $($_.Exception.Message)"
+            Write-Host "WARNING: Could not gracefully quit the Office application. Error: $($_.Exception.Message)" -ForegroundColor Yellow
         }
         [System.Runtime.InteropServices.Marshal]::ReleaseComObject($appObject) | Out-Null
         Remove-Variable appObject -ErrorAction SilentlyContinue

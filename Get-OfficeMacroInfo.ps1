@@ -41,13 +41,13 @@ switch ($fileExtension) {
         $documentsOrPresentationsCollection = "Presentations"
     }
     default {
-        Write-Error "Unsupported file type: $fileExtension. This script supports .xlsm, .xls, .docm, .dotm, .pptm, .ppsm for macro information retrieval."
+        Write-Host "ERROR: Unsupported file type: $fileExtension. This script supports .xlsm, .xls, .docm, .dotm, .pptm, .ppsm for macro information retrieval." -ForegroundColor Red
         exit 1
     }
 }
 
 # --- Important: Office Trust Center Setting ---
-Write-Warning "Ensure 'Trust access to the VBA project object model' is ENABLED in the Trust Center settings of the respective Office application ($($appComObjectString.Split('.')[0]))."
+Write-Host "WARNING: Ensure 'Trust access to the VBA project object model' is ENABLED in the Trust Center settings of the respective Office application ($($appComObjectString.Split('.')[0]))." -ForegroundColor Yellow
 
 $appObject = New-Object -ComObject $appComObjectString
 $appObject.Visible = $false
@@ -73,7 +73,7 @@ try {
     }
 
     if (-not $documentObject) {
-        Write-Error "Failed to open the file: $FilePath"
+        Write-Host "ERROR: Failed to open the file: $FilePath" -ForegroundColor Red
         throw "FileOpenFailed"
     }
 
@@ -95,10 +95,10 @@ try {
         try {
             $vbaProject = $documentObject.VBProject
         } catch {
-            Write-Warning "Could not access the VBA project. This can happen if:"
-            Write-Warning "1. The file has no VBA macros."
-            Write-Warning "2. 'Trust access to the VBA project object model' is NOT enabled in the respective Office application's Trust Center."
-            Write-Warning "3. The file's VBA project is password protected."
+            Write-Host "WARNING: Could not access the VBA project. This can happen if:" -ForegroundColor Yellow
+            Write-Host "WARNING: 1. The file has no VBA macros." -ForegroundColor Yellow
+            Write-Host "WARNING: 2. 'Trust access to the VBA project object model' is NOT enabled in the respective Office application's Trust Center." -ForegroundColor Yellow
+            Write-Host "WARNING: 3. The file's VBA project is password protected." -ForegroundColor Yellow
         }
 
         if ($vbaProject) {
@@ -130,17 +130,17 @@ try {
                 }
             }
         } else {
-            Write-Warning "No VBA project found or accessible in '$($documentObject.Name)'."
-            Write-Warning "Ensure 'Trust access to the VBA project object model' is enabled in the $($appComObjectString.Split('.')[0]) Trust Center."
+            Write-Host "WARNING: No VBA project found or accessible in '$($documentObject.Name)'." -ForegroundColor Yellow
+            Write-Host "WARNING: Ensure 'Trust access to the VBA project object model' is enabled in the $($appComObjectString.Split('.')[0]) Trust Center." -ForegroundColor Yellow
         }
     } else {
-         Write-Warning "The file '$($documentObject.Name)' does not report having a VBA project (e.g., Excel's HasVBProject is false)."
+         Write-Host "WARNING: The file '$($documentObject.Name)' does not report having a VBA project (e.g., Excel's HasVBProject is false)." -ForegroundColor Yellow
     }
 }
 catch {
-    Write-Error "An error occurred: $($_.Exception.Message)"
+    Write-Error "An error occurred: $($_.Exception.Message)" # Keep Write-Error for actual exception objects
     if ($_.Exception.Message -like "*0x800A03EC*") {
-         Write-Warning "This error (often 0x800A03EC) can indicate that the file is corrupt, not a valid Office document for the specified application, or Excel/Word cannot access it."
+         Write-Host "WARNING: This error (often 0x800A03EC) can indicate that the file is corrupt, not a valid Office document for the specified application, or Excel/Word cannot access it." -ForegroundColor Yellow
     }
 }
 finally {
@@ -160,7 +160,7 @@ finally {
                 $documentObject.Close($false) # $false means do not save changes.
             }
         } catch {
-            Write-Warning "Could not gracefully close the document object. Error: $($_.Exception.Message)"
+            Write-Host "WARNING: Could not gracefully close the document object. Error: $($_.Exception.Message)" -ForegroundColor Yellow
         }
         [System.Runtime.InteropServices.Marshal]::ReleaseComObject($documentObject) | Out-Null
         Remove-Variable documentObject -ErrorAction SilentlyContinue
@@ -171,7 +171,7 @@ finally {
         try {
             $appObject.Quit()
         } catch {
-            Write-Warning "Could not gracefully quit the Office application. Error: $($_.Exception.Message)"
+            Write-Host "WARNING: Could not gracefully quit the Office application. Error: $($_.Exception.Message)" -ForegroundColor Yellow
         }
         [System.Runtime.InteropServices.Marshal]::ReleaseComObject($appObject) | Out-Null
         Remove-Variable appObject -ErrorAction SilentlyContinue
