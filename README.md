@@ -84,3 +84,18 @@ This script removes a specified VBA module from an Office file.
 * **"Could not access the VBA project..."**: Ensure "Trust access to the VBA project object model" is enabled in the relevant Office application's Trust Center.
 * **"File is open..." or errors like 0x800A03EC**: Make sure the target Office file is not open in Excel/Word/PowerPoint when running scripts that modify it (especially `Remove-OfficeVbaModule.ps1`).
 * **COM Errors**: Ensure Microsoft Office is correctly installed and registered. A repair of the Office installation might sometimes be necessary.
+
+
+## Sample Screenshots
+
+**Get-OfficeMacroInfo.ps1**
+
+Found 2 Macro codes - `Module1` and `TestMod`...
+
+![Screenshot of Get-OfficeMacroInfo.ps1 output](screenshots/Get-OfficeMacroInfo_output.png)
+
+**Remove-OfficeVbaModule.ps1**
+
+Removing `TestMod` macro and verifying it's gone...
+
+![Screenshot of Remove-OfficeVbaModule.ps1 running](screenshots/Remove-OfficeVbaModule_running.png)
