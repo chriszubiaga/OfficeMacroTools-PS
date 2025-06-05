@@ -1,99 +1,45 @@
-Office VBA Management Scripts for PowerShell
+# Office VBA Management Scripts for PowerShell
+
 This repository contains PowerShell scripts designed to help manage VBA (Visual Basic for Applications) projects within Microsoft Office files (Excel, Word, PowerPoint). You can inspect VBA macro code and remove specific VBA modules programmatically.
 
-Features
-Inspect VBA Macros: View the names, types, and code content of all VBA components within a specified Office file.
+## Features
 
-Remove VBA Modules: Programmatically delete specific VBA modules (e.g., standard modules, class modules) from an Office file.
+* **Inspect VBA Macros**: View the names, types, and code content of all VBA components within a specified Office file.
+* **Remove VBA Modules**: Programmatically delete specific VBA modules (e.g., standard modules, class modules) from an Office file.
+* **Cross-Application Support**: Works with:
+    * Excel: `.xlsm`, `.xls`
+    * Word: `.docm`, `.dotm`
+    * PowerPoint: `.pptm`, `.ppsm`
 
-Cross-Application Support: Works with:
+## Scripts
 
-Excel: .xlsm, .xls
+1.  **`Get-OfficeMacroInfo.ps1`**: Reads and displays information about VBA components and their code from an Office file.
+2.  **`Remove-OfficeVbaModule.ps1`**: Removes a specified VBA module from an Office file.
 
-Word: .docm, .dotm
+## Prerequisites
 
-PowerPoint: .pptm, .ppsm
+1.  **Windows PowerShell**: These scripts are designed for PowerShell (typically version 5.1 or later).
+2.  **Microsoft Office Installed**: The relevant Microsoft Office application (Excel, Word, or PowerPoint) must be installed on the machine where the script is run. The scripts use COM automation to interact with the Office applications.
+3.  **"Trust access to the VBA project object model"**: This setting **MUST BE ENABLED** in the Trust Center for each Office application you intend to use with these scripts.
+    * To enable:
+        1.  Open the Office application (e.g., Excel).
+        2.  Go to `File > Options > Trust Center > Trust Center Settings...`.
+        3.  Select `Macro Settings`.
+        4.  Under "Developer Macro Settings", check the box for **"Trust access to the VBA project object model"**.
+        5.  Click `OK` to close the dialogs.
+        6.  Repeat for Word and PowerPoint if you plan to use the scripts with those file types.
 
-Scripts
-Get-OfficeMacroInfo.ps1: Reads and displays information about VBA components and their code from an Office file.
+## Usage
 
-Remove-OfficeVbaModule.ps1: Removes a specified VBA module from an Office file.
+### 1. `Get-OfficeMacroInfo.ps1`
 
-Prerequisites
-Windows PowerShell: These scripts are designed for PowerShell (typically version 5.1 or later).
-
-Microsoft Office Installed: The relevant Microsoft Office application (Excel, Word, or PowerPoint) must be installed on the machine where the script is run. The scripts use COM automation to interact with the Office applications.
-
-"Trust access to the VBA project object model": This setting MUST BE ENABLED in the Trust Center for each Office application you intend to use with these scripts.
-
-To enable:
-
-Open the Office application (e.g., Excel).
-
-Go to File > Options > Trust Center > Trust Center Settings....
-
-Select Macro Settings.
-
-Under "Developer Macro Settings", check the box for "Trust access to the VBA project object model".
-
-Click OK to close the dialogs.
-
-Repeat for Word and PowerPoint if you plan to use the scripts with those file types.
-
-Usage
-1. Get-OfficeMacroInfo.ps1
 This script inspects an Office file and outputs details about its VBA project, including components and their code.
 
-Parameters:
+**Parameters:**
 
--FilePath <string>: (Mandatory) The full path to the Office file you want to inspect.
+* `-FilePath <string>`: (Mandatory) The full path to the Office file you want to inspect.
 
-Example:
+**Example:**
 
+```powershell
 .\Get-OfficeMacroInfo.ps1 -FilePath "C:\Path\To\Your\Workbook.xlsm"
-```powershell
-.\Get-OfficeMacroInfo.ps1 -FilePath "C:\Path\To\Your\Document.docm"
-```powershell
-.\Get-OfficeMacroInfo.ps1 -FilePath "C:\Path\To\Your\Presentation.pptm"
-
-2. Remove-OfficeVbaModule.ps1
-This script removes a specified VBA module from an Office file.
-
-Parameters:
-
--FilePath <string>: (Mandatory) The full path to the Office file.
-
--ModuleNameToRemove <string>: (Mandatory) The name of the VBA module you want to remove (e.g., "Module1", "MyCustomClass").
-
-Important Before Running Remove-OfficeVbaModule.ps1:
-
-BACK UP YOUR FILES! This script modifies files. Always have a backup before running it.
-
-Ensure the target Office file is CLOSED. The script cannot reliably modify a file that is currently open in its respective Office application.
-
-Example:
-
-.\Remove-OfficeVbaModule.ps1 -FilePath "C:\Path\To\Your\Workbook.xlsm" -ModuleNameToRemove "Module1"
-```powershell
-.\Remove-OfficeVbaModule.ps1 -FilePath "C:\Path\To\Your\Document.docm" -ModuleNameToRemove "ObsoleteCodeModule"
-
-Important Considerations & Limitations
-Security: Enabling "Trust access to the VBA project object model" lowers a specific security barrier. Understand the implications in your environment. Consider disabling it when not actively using these scripts if security is a major concern.
-
-File Access: Ensure the PowerShell script has the necessary read/write permissions for the files and directories it's interacting with.
-
-Error Handling: The scripts include basic error handling, but COM automation can sometimes be sensitive. If you encounter persistent issues, check that the Office application itself is functioning correctly and that the file isn't corrupted or locked.
-
-Document Modules: You cannot use Remove-OfficeVbaModule.ps1 to remove "Document" type modules (e.g., ThisWorkbook, Sheet1 in Excel; ThisDocument in Word). These are intrinsic to the file structure. To remove code from them, you would need to modify the script to clear their CodeModule content instead of removing the component.
-
-Office Application State: The scripts create and quit instances of Office applications in the background. If an Office application hangs or doesn't quit properly, you might need to manually close it via Task Manager.
-
-Troubleshooting
-"Could not access the VBA project...": Ensure "Trust access to the VBA project object model" is enabled in the relevant Office application's Trust Center.
-
-"File is open..." or errors like 0x800A03EC: Make sure the target Office file is not open in Excel/Word/PowerPoint when running scripts that modify it (especially Remove-OfficeVbaModule.ps1).
-
-COM Errors: Ensure Microsoft Office is correctly installed and registered. A repair of the Office installation might sometimes be necessary.
-
-Disclaimer
-Use these scripts at your own risk. Always back up important files before performing operations that modify them. The authors are not responsible for any data loss or issues that may arise from their use.
