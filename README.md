@@ -31,7 +31,7 @@ This repository contains PowerShell scripts designed to help manage VBA (Visual 
 
 ## Usage
 
-### 1. `Get-OfficeMacroInfo.ps1`
+### `Get-OfficeMacroInfo.ps1`
 
 This script inspects an Office file and outputs details about its VBA project, including components and their code.
 
@@ -43,3 +43,44 @@ This script inspects an Office file and outputs details about its VBA project, i
 
 ```powershell
 .\Get-OfficeMacroInfo.ps1 -FilePath "C:\Path\To\Your\Workbook.xlsm"
+```powershell
+.\Get-OfficeMacroInfo.ps1 -FilePath "C:\Path\To\Your\Document.docm"
+```powershell
+.\Get-OfficeMacroInfo.ps1 -FilePath "C:\Path\To\Your\Presentation.pptm"
+```
+
+### `Remove-OfficeVbaModule.ps1`
+
+This script removes a specified VBA module from an Office file.
+
+**Parameters:**
+
+* `-FilePath <string>`: (Mandatory) The full path to the Office file.
+* `-ModuleNameToRemove <string>`: (Mandatory) The name of the VBA module you want to remove (e.g., "Module1", "MyCustomClass").
+
+**Important Before Running `Remove-OfficeVbaModule.ps1`:**
+
+* **BACK UP YOUR FILES!** This script modifies files. Always have a backup before running it.
+* **Ensure the target Office file is CLOSED.** The script cannot reliably modify a file that is currently open in its respective Office application.
+
+**Example:**
+
+```powershell
+.\Remove-OfficeVbaModule.ps1 -FilePath "C:\Path\To\Your\Workbook.xlsm" -ModuleNameToRemove "Module1"
+```powershell
+.\Remove-OfficeVbaModule.ps1 -FilePath "C:\Path\To\Your\Document.docm" -ModuleNameToRemove "ObsoleteCodeModule"
+```
+
+## Important Considerations & Limitations
+
+* **Security**: Enabling "Trust access to the VBA project object model" lowers a specific security barrier. Understand the implications in your environment. Consider disabling it when not actively using these scripts if security is a major concern.
+* **File Access**: Ensure the PowerShell script has the necessary read/write permissions for the files and directories it's interacting with.
+* **Error Handling**: The scripts include basic error handling, but COM automation can sometimes be sensitive. If you encounter persistent issues, check that the Office application itself is functioning correctly and that the file isn't corrupted or locked.
+* **Document Modules**: You cannot use `Remove-OfficeVbaModule.ps1` to remove "Document" type modules (e.g., `ThisWorkbook`, `Sheet1` in Excel; `ThisDocument` in Word). These are intrinsic to the file structure. To remove code from them, you would need to modify the script to clear their `CodeModule` content instead of removing the component.
+* **Office Application State**: The scripts create and quit instances of Office applications in the background. If an Office application hangs or doesn't quit properly, you might need to manually close it via Task Manager.
+
+## Troubleshooting
+
+* **"Could not access the VBA project..."**: Ensure "Trust access to the VBA project object model" is enabled in the relevant Office application's Trust Center.
+* **"File is open..." or errors like 0x800A03EC**: Make sure the target Office file is not open in Excel/Word/PowerPoint when running scripts that modify it (especially `Remove-OfficeVbaModule.ps1`).
+* **COM Errors**: Ensure Microsoft Office is correctly installed and registered. A repair of the Office installation might sometimes be necessary.
